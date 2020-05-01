@@ -1,0 +1,7 @@
+250 black
+270 blue   
+285 cyan
+300 green
+315 yellow
+330 orange
+350 red    

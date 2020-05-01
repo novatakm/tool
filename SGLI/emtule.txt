@@ -1,0 +1,7 @@
+0.89 black
+0.90 brown
+0.92 yellow
+0.94 orange
+0.96 red
+0.98 green
+1.0  cyan 
