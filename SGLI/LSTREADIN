@@ -1,0 +1,92 @@
+#!/bin/sh
+#
+# LSTREADIN H5FILE
+#
+FN=$$
+#
+YMD=`basename $1 | awk '{print substr($1,8,9)}'`
+V=`basename $1 | awk '{print substr($1,22,2)}'`
+H=`basename $1 | awk '{print substr($1,24,2)}'`
+#
+gdalinfo $1 > /tmp/$FN
+#
+LLAT=`grep Geometry_data_Lower_left_latitude /tmp/$FN | tr '=' ' ' | awk '{print $2}'`
+ULAT=`grep Geometry_data_Upper_left_latitude /tmp/$FN | tr '=' ' ' | awk '{print $2}'`
+LLNG1=`grep Geometry_data_Lower_left_longitude /tmp/$FN | tr '=' ' ' | awk '{print $2}'`
+LLNG2=`grep Geometry_data_Upper_left_longitude /tmp/$FN | tr '=' ' ' | awk '{print $2}'`
+LLNG=`echo $LLNG1 $LLNG2 | awk '($1<$2){print $1} ($1>=$2){print $2}'`
+RLNG1=`grep Geometry_data_Lower_right_longitude /tmp/$FN | tr '=' ' ' | awk '{print $2}'`
+RLNG2=`grep Geometry_data_Upper_right_longitude /tmp/$FN | tr '=' ' ' | awk '{print $2}'`
+RLNG=`echo $RLNG1 $RLNG2 | awk '($1<$2){print $2} ($1>=$2){print $1}'`
+#
+#E01 
+#
+DD=`grep Image_data_Grid_interval= /tmp/$FN | head -1 | tr '=' ' ' | awk '{print $2}'`
+LLRECL=`echo $LLNG $RLNG $DD | awk '{print int(0.5+($2-$1)/$3)}'`
+G=`grep Image_data_E01_Slope= /tmp/$FN  | tr '=' ' '| awk '{print $2}'`
+O=`grep Image_data_E01_Offset= /tmp/$FN  | tr '=' ' '| awk '{print $2}'`
+echo 4800 4800 > /tmp/P$FN
+echo $LLRECL 4800 >> /tmp/P$FN
+echo $H $V >> /tmp/P$FN
+echo $ULAT $LLAT $RLNG $LLNG $DD 255 >> /tmp/P$FN
+h5dump -d //Image_data/E01 -b LE -o /tmp/D$FN $1
+echo /tmp/D$FN >> /tmp/P$FN
+echo $G $O >> /tmp/P$FN
+$HOME/SGLI/TOOL2/SIN2LL_UCGO /tmp/P$FN > /tmp/S$FN
+r.in.bin -d input=/tmp/S$FN output="SV"$V"H"$H"_"$YMD"_E01" n=$ULAT s=$LLAT w=$LLNG e=$RLNG rows=4800 cols=$LLRECL anull=-500
+r.colors map="SV"$V"H"$H"_"$YMD"_E01" rules=$HOME/SGLI/LST/CODESGLI/emtule.txt 
+rm /tmp/P$FN /tmp/D$FN /tmp/S$FN
+#
+#E02 
+#
+DD=`grep Image_data_Grid_interval= /tmp/$FN | head -1 | tr '=' ' ' | awk '{print $2}'`
+LLRECL=`echo $LLNG $RLNG $DD | awk '{print int(0.5+($2-$1)/$3)}'`
+G=`grep Image_data_E02_Slope= /tmp/$FN  | tr '=' ' '| awk '{print $2}'`
+O=`grep Image_data_E02_Offset= /tmp/$FN  | tr '=' ' '| awk '{print $2}'`
+echo 4800 4800 > /tmp/P$FN
+echo $LLRECL 4800 >> /tmp/P$FN
+echo $H $V >> /tmp/P$FN
+echo $ULAT $LLAT $RLNG $LLNG $DD 255 >> /tmp/P$FN
+h5dump -d //Image_data/E02 -b LE -o /tmp/D$FN $1
+echo /tmp/D$FN >> /tmp/P$FN
+echo $G $O >> /tmp/P$FN
+$HOME/SGLI/TOOL2/SIN2LL_UCGO /tmp/P$FN > /tmp/S$FN
+r.in.bin -d input=/tmp/S$FN output="SV"$V"H"$H"_"$YMD"_E02" n=$ULAT s=$LLAT w=$LLNG e=$RLNG rows=4800 cols=$LLRECL anull=-500
+r.colors map="SV"$V"H"$H"_"$YMD"_E02" rules=$HOME/SGLI/LST/CODESGLI/emtule.txt
+rm /tmp/P$FN /tmp/D$FN /tmp/S$FN
+#
+#LST
+#
+DD=`grep Image_data_Grid_interval= /tmp/$FN | head -1 | tr '=' ' ' | awk '{print $2}'`
+LLRECL=`echo $LLNG $RLNG $DD | awk '{print int(0.5+($2-$1)/$3)}'`
+G=`grep Image_data_LST_Slope= /tmp/$FN  | tr '=' ' '| awk '{print $2}'`
+O=`grep Image_data_LST_Offset= /tmp/$FN  | tr '=' ' '| awk '{print $2}'`
+echo 4800 4800 > /tmp/P$FN
+echo $LLRECL 4800 >> /tmp/P$FN
+echo $H $V >> /tmp/P$FN
+echo $ULAT $LLAT $RLNG $LLNG $DD 65535 >> /tmp/P$FN
+h5dump -d //Image_data/LST -b LE -o /tmp/D$FN $1
+echo /tmp/D$FN >> /tmp/P$FN
+echo $G $O >> /tmp/P$FN
+$HOME/SGLI/TOOL2/SIN2LL_USGO /tmp/P$FN > /tmp/S$FN
+r.in.bin -d input=/tmp/S$FN output="SV"$V"H"$H"_"$YMD"_LST" n=$ULAT s=$LLAT w=$LLNG e=$RLNG rows=4800 cols=$LLRECL anull=-500
+r.colors map="SV"$V"H"$H"_"$YMD"_LST" rules=$HOME/SGLI/LST/CODESGLI/tstule.txt
+rm /tmp/P$FN /tmp/D$FN /tmp/S$FN
+#
+#LSTQA
+#
+DD=`grep Image_data_Grid_interval= /tmp/$FN | head -1 | tr '=' ' ' | awk '{print $2}'`
+LLRECL=`echo $LLNG $RLNG $DD | awk '{print int(0.5+($2-$1)/$3)}'`
+echo 4800 4800 > /tmp/P$FN
+echo $LLRECL 4800 >> /tmp/P$FN
+echo $H $V >> /tmp/P$FN
+echo $ULAT $LLAT $RLNG $LLNG $DD 65535 >> /tmp/P$FN
+h5dump -d //Image_data/QA_flag -b LE -o /tmp/D$FN $1
+echo /tmp/D$FN >> /tmp/P$FN
+$HOME/SGLI/TOOL2/SIN2LL_US /tmp/P$FN > /tmp/S$FN
+r.in.bin bytes=2 input=/tmp/S$FN output="SV"$V"H"$H"_"$YMD"_LSTQA" n=$ULAT s=$LLAT w=$LLNG e=$RLNG rows=4800 cols=$LLRECL anull=65535
+g.rename rast="SV"$V"H"$H"_"$YMD"_LSTQA",X$FN
+r.mapcalc "X$FN = (X$FN >> 8)"
+g.rename rast=X$FN,"SV"$V"H"$H"_"$YMD"_LSTQA"
+r.colors map="SV"$V"H"$H"_"$YMD"_LSTQA" rules=$HOME/SGLI/LST/CODESGLI/tqatule.txt
+rm /tmp/P$FN /tmp/D$FN /tmp/S$FN /tmp/$FN
