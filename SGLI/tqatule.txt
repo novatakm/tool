@@ -1,6 +1,0 @@
-0 black
-1 blue
-2 green
-4 yellow
-8 grey  
-16 white
